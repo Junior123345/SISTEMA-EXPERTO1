@@ -7,13 +7,16 @@ import os
 import numpy as np
 from io import BytesIO
 
+# Cargar variables de entorno desde .env
+load_dotenv()
+
 app = Flask(__name__)
 
 # Configuración de la clave secreta para sesiones seguras
 app.secret_key = os.getenv("SECRET_KEY", "clave_secreta_segura")
 
 # Configuración de cookies para producción
-app.config['SESSION_COOKIE_SECURE'] = os.getenv("SESSION_COOKIE_SECURE", False)
+app.config['SESSION_COOKIE_SECURE'] = os.getenv("SESSION_COOKIE_SECURE", "False").lower() in ['true', '1']
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
@@ -73,6 +76,10 @@ all_recommendations = {
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/healthz')
+def health_check():
+    return "OK", 200
 
 # Endpoint para predecir
 @app.route('/predict', methods=['POST'])
