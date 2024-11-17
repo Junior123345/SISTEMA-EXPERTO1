@@ -1,11 +1,21 @@
 from flask import Flask, request, jsonify, render_template
 import tensorflow as tf
+from dotenv import load_dotenv
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.applications.efficientnet import preprocess_input
+import os
 import numpy as np
 from io import BytesIO
 
 app = Flask(__name__)
+
+# Configuración de la clave secreta para sesiones seguras
+app.secret_key = os.getenv("SECRET_KEY", "clave_secreta_segura")
+
+# Configuración de cookies para producción
+app.config['SESSION_COOKIE_SECURE'] = os.getenv("SESSION_COOKIE_SECURE", False)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # Cargar el modelo
 model_path = "./modelos/modelo_papa.keras"
@@ -96,12 +106,12 @@ def predict():
         return jsonify({
             "predicted_class": clase_predicha,
             "confidence": f"{probabilidad_clase:.2f}%",
-            "specific_recommendations": recomendaciones,
-            "all_recommendations": all_recommendations
+            "specific_recommendations": recomendaciones
         })
     except Exception as e:
         print(f"Error procesando la imagen: {str(e)}")
         return jsonify({"error": f"Error procesando la imagen: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
