@@ -20,7 +20,7 @@ app.config['SESSION_COOKIE_SECURE'] = os.getenv("SESSION_COOKIE_SECURE", "False"
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
-# Cargar el modelo
+# Cargar el modelo una vez
 model_path = "./modelos/modelo_papa.keras"
 print("Cargando el modelo...")
 try:
@@ -72,7 +72,6 @@ all_recommendations = {
     ]
 }
 
-# Ruta principal para la interfaz gráfica
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -81,7 +80,6 @@ def home():
 def health_check():
     return "OK", 200
 
-# Endpoint para predecir
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
@@ -92,24 +90,19 @@ def predict():
         return jsonify({"error": "No se seleccionó ninguna imagen."}), 400
     
     try:
-        # Procesar la imagen
         print("Procesando la imagen...")
         img = tf.keras.utils.load_img(BytesIO(file.read()), target_size=(224, 224))
         img_array = img_to_array(img)
         img_array = preprocess_input(img_array)
         img_array = np.expand_dims(img_array, axis=0)
         
-        # Realizar predicción
         print("Realizando predicción...")
         predictions = model.predict(img_array)
         predicted_class = np.argmax(predictions)
         clase_predicha = class_labels[predicted_class]
         probabilidad_clase = predictions[0][predicted_class] * 100
 
-        # Obtener recomendaciones específicas
         recomendaciones = all_recommendations.get(clase_predicha, ["No hay recomendaciones disponibles para esta clase."])
-
-        print(f"Predicción exitosa: {clase_predicha} ({probabilidad_clase:.2f}%)")
         return jsonify({
             "predicted_class": clase_predicha,
             "confidence": f"{probabilidad_clase:.2f}%",
