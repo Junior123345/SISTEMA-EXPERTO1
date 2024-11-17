@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: sistema-experto
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        value: "tu_clave_secreta"
+      - key: SESSION_COOKIE_SECURE
+        value: "False"
+    disk:
+      sizeGB: 1
